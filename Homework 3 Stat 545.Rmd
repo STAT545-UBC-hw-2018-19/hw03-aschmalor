@@ -1,0 +1,146 @@
+---
+title: "Homework 3 Stat 545"
+author: "Anita"
+date: "October 1, 2018"
+output: github_document
+---
+
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(gapminder))
+suppressPackageStartupMessages(library(ggplot2))
+```
+
+
+#Minimum and maximum gdp per capita per year per continent
+```{r}
+gdp.1 <-gapminder %>%
+  group_by(continent, year) %>%
+  summarize("Highest_gdpPercap" = max(gdpPercap),
+            "Lowest_gdpPercap" = min(gdpPercap)) #now we see the two groups for every continent
+
+knitr::kable(gdp.1)
+
+
+gdp.1 %>% 
+ggplot(aes(x = year))+
+  geom_line(mapping = aes(y = Lowest_gdpPercap, color = "Lowest_gdpPercap"))+
+   geom_line(mapping = aes( y = Highest_gdpPercap, color = "Highest_gdpPercap"))+
+  scale_colour_manual( "Trend", values = c("Lowest_gdpPercap" = "blue", "Highest_gdpPercap" = "grey"))+
+    facet_wrap(~continent)+
+    theme_bw()+
+   ggtitle("The Minimum and Maximum GDP Per Capita Over Time")+
+   ylab("GDP Per Capita")
+```
+
+
+
+I haven't figured out yet how to change the colours of the lines in teh graph and how to change the description of the legend.
+I also couldn't figure out how to change the label on the y- and x-axes (the xlab and ylab commands didn't work).
+I would like to get some more practice using 'theme'.
+ 
+ 
+ 
+#Spread of GDP per cap by year by continent
+```{r}
+gdp.2 <-  gapminder %>%
+  group_by(continent, year) %>%
+  summarize(Std.Deviation = sd(gdpPercap),
+            Variance = var(gdpPercap))
+
+knitr::kable(gdp.2)
+
+ggplot(gdp.2, aes(year)) +
+  geom_line(aes(y=Std.Deviation, color=continent)) + 
+  scale_size_area() 
+```
+
+
+From this graph we can see the size of the standard deviation comparing the different continents. As we can see, the standard deviation of GDP per capita for the countries in Asia was much larger than that of all countries from other countries between 1952 and 1985. This shows that Asia varied much more in the GDP per country and that there were likely countries with very high and very low GDP per capita. Thus, it is likley that there was a gretaer difference in wealth and poverty rates between different Asian countries than between different countries in other continents. Of course, this doesn't necessarily mean that Asia had the poorest countries. It is possible that, for example, Africa had many more poor countries but because all African countries tend to have a lower GDP per capita, the standard deviation when just looking at African countries is lower. We can also see that the standard deviation of Asian countries since 1985 has become more similar to that of the other continents and this is likely due to an increase in GDP per capita in the poorer countries (although this needs to be further investigated in the data set to be able to draw firm conclusions, of course).
+
+
+#How is GDP changing over time on different continents (broken down by countries)
+```{r}
+gdp.3 <-gapminder %>%
+  group_by(continent, year) %>%
+  mutate(gdp = gdpPercap*pop) #now we see the two groups for every continent
+
+knitr::kable(gdp.3)
+
+ggplot(gdp.3, aes(year, gdp)) +
+  facet_wrap(~continent)+
+  geom_jitter(aes(color = gdp)) + scale_color_continuous(trans="log10")
+```
+
+
+We can see that in Africa and Oceania GDP hasn't changed all that much between 192 and 2007 while it has drastically changed for one country in the Americas and also increased for several countries in Asia and Europe.
+
+
+
+Code that I'm not running (cheat sheet help from TA :)
+Continent.range <- gapminder %>%
+  group_by(continent, year) %>% 
+  summarise(Min_gdpPercapita = min(gdpPercap), Max_gdpPercapita = max(gdpPercap)) 
+
+
+ggplot(gdp.1, aes(year), ylab("GDP per capita"), xlab("Year")) +
+  facet_wrap(~ continent) +
+  geom_line(aes(y = `Highest gdpPercap`, color = "`Highest gdpPercap`"))+
+  geom_line(aes(y = `Lowest gdpPercap`, color = "`Lowest gdpPercap`" ))
+
+
+Continent.range %>% 
+ggplot(aes(x = year))+
+  geom_line(mapping = aes(y = Min_gdpPercapita, color = "Min_gdpPercapita"))+
+   geom_line(mapping = aes( y = Max_gdpPercapita, color = "Max_gdpPercapita"))+
+    facet_wrap(~continent)+
+    theme_bw()+
+   ggtitle("The Minimum and Maximum GDP Per Capita Over Time")+
+   ylab("GDP Per Capita")
+
+.#scale_colour_manual( "The ledged title", values = "Variables we want to attach a colour to")
+.# However you need to have the variable you want to color by in the aes(colour = variables_name)
+
+
+Continent.range %>% 
+ggplot(aes(x = year))+
+  geom_line(mapping = aes(y = Min_gdpPercapita, color = "Min_gdpPercapita"))+
+   geom_line(mapping = aes( y = Max_gdpPercapita, color = "Max_gdpPercapita"))+
+  scale_colour_manual( "Here is a title", values = c("Min_gdpPercapita" = "red", "Max_gdpPercapita" = "green"))+
+    facet_wrap(~continent)+
+    theme_bw()+
+   ggtitle("The Minimum and Maximum GDP Per Capita Over Time")+
+   ylab("GDP Per Capita")
+
+
+cols <- c("Min_gdpPercapita" = "black", "Max_gdpPercapita" = "blue") # I'm just making a named vector here to clean up the code below
+
+Continent.range %>% 
+ggplot(aes(x = year))+
+  geom_line(mapping = aes(y = Min_gdpPercapita, color = "Min_gdpPercapita"))+
+   geom_line(mapping = aes( y = Max_gdpPercapita, color = "Max_gdpPercapita"))+
+  scale_colour_manual( "Trend lines:", values = cols)+
+    facet_wrap(~continent)+
+    theme_bw()+
+   ggtitle("The Minimum and Maximum GDP Per Capita Over Time")+
+   ylab("GDP Per Capita")
+
+Continent.range %>% 
+ggplot(aes(x = year))+
+  geom_line(mapping = aes(y = Min_gdpPercapita, color = "Min_gdpPercapita"))+
+   geom_line(mapping = aes( y = Max_gdpPercapita, color = "Max_gdpPercapita"))+
+  scale_colour_manual( "Trend lines:",
+                       values = cols,
+                       breaks = c("Min_gdpPercapita", "Max_gdpPercapita"), # The original values 
+                       labels = c("Minimum GDP", "Maximum GDP")# What you want to call them 
+  )+
+    facet_wrap(~continent)+
+    theme_bw()+
+   ggtitle("The Minimum and Maximum GDP Per Capita Over Time")+
+   ylab("GDP Per Capita")
+
+```
+
+
+
